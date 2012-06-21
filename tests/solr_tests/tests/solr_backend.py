@@ -1089,6 +1089,19 @@ class LiveSolrAutocompleteTestCase(TestCase):
         self.assertEqual([result.pk for result in autocomplete_3], ['12', '1', '14', '22'])
         self.assertEqual(len([result.pk for result in autocomplete_3]), 4)
 
+    def test_mfac(self):
+        mfac1 = self.sqs.mfac(["text", "name"], "daniel1")
+        self.assertEqual(sorted([result.pk for result in mfac1]),
+                         sorted(['1', '5', '6', '7', '9', '11', '18']))
+        self.assertTrue(all((result.name=="daniel1" for result in mfac1)))
+
+        mfac2 = self.sqs.mfac(["text", "name"], "SearchIndex")
+        import ipdb
+        ipdb.set_trace()
+        self.assertEqual(sorted([result.pk for result in mfac2]),
+                         sorted([u'6', u'4', u'1', u'3', u'12', u'18', u'23',
+                                 u'14', u'15', u'22']))
+
 
 class LiveSolrRoundTripTestCase(TestCase):
     def setUp(self):

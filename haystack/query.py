@@ -532,6 +532,30 @@ class SearchQuerySet(object):
         qs._flat = flat
         return qs
 
+    def mfac(self, fields, fragment, **kwargs):
+        """
+        Multi-field checks for autocomplete.
+        `fields` : Iterable composed of field names to search against
+        `fragment`: The term sought
+        
+        """
+        # One small sanity check in case the user passes in a string.
+        if isinstance(fields, basestring):
+            fields = fields.split(' ')
+            
+        clone = self._clone()
+        query_bits = []
+        lookup = kwargs.get('lookup', '')
+
+        for field in fields:
+            subqueries = []
+            for word in fragment.split(' '):
+                kwargs = {field + lookup: word}
+                subqueries.append(SQ(**kwargs))
+            query_bits.append(reduce(operator.and_, subqueries))
+
+        return clone.filter(reduce(operator.or_, query_bits))
+        
     # Utility methods.
 
     def _clone(self, klass=None):
