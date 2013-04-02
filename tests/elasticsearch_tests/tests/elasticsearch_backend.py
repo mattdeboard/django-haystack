@@ -713,6 +713,28 @@ class LiveElasticsearchSearchQuerySetTestCase(TestCase):
         self.assertEqual(sqs.query.build_query(), u'("pants\\:rule")')
         self.assertEqual(len(sqs), 0)
 
+    def test_extra(self):
+        # Since the 'extra' method is so free-form, we're just going to test
+        # a couple of generic cases that test the general idea: 'extra' should
+        # override any other method calls, if they conflict.
+        
+        # Ensure that params passed in get passed to Solr.
+        sqs1 = self.sqs._clone()
+        params = {'facets': {'name': {'terms': {'field': 'name', 'size': 10}}}}
+        extra_facet = sqs.extra(params)
+        sqs2 = self.sqs._clone()
+        api_facet = sqs.facet('name')
+        self.assertItemsEqual(extra_facet['fields']['name'],
+                              api_facet['fields']['name'])
+
+        # Let's make sure that by setting facet=false, it's like we didn't
+        # invoke facet at all. 
+        control = self.sqs._clone()
+        sqs = self.sqs._clone()
+        sqs = sqs.order_by('pk')
+        sqs = sqs.extra({'sort': [{'name': 'asc'}]})
+        self.assertItemsEqual(control.facet_counts(), sqs.facet_counts())
+
     # Regressions
 
     @unittest.expectedFailure
